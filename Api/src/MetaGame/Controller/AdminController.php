@@ -218,7 +218,7 @@ class AdminController extends AbstractFOSRestController
         return $this->view("{$numberOfElementsDeleted} alert elements deleted successfully", Response::HTTP_OK);
     }
 
-     /**
+    /**
      * Return a player data adapted for admin view.
      *
      * @OA\Parameter(
@@ -238,7 +238,7 @@ class AdminController extends AbstractFOSRestController
      * @Rest\View()
      */
     public function getAdminViewPlayer(Player $player): View
-    {   
+    {
         $this->denyAccessIfNotAdmin();
 
         $context = new Context();
