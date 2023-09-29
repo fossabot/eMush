@@ -4,6 +4,7 @@ namespace Mush\MetaGame\Controller;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use FOS\RestBundle\Context\Context;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\View\View;
@@ -75,13 +76,7 @@ class AdminController extends AbstractFOSRestController
      */
     public function addNewRoomsToDaedalus(Request $request): View
     {
-        $admin = $this->getUser();
-        if (!$admin instanceof User) {
-            throw new HttpException(Response::HTTP_UNAUTHORIZED, 'Request author user not found');
-        }
-        if (!$admin->isAdmin()) {
-            throw new HttpException(Response::HTTP_UNAUTHORIZED, 'Only admins can add rooms to Daedalus');
-        }
+        $this->denyAccessIfNotAdmin();
 
         $daedalusId = intval($request->get('id'));
         $daedalus = $this->daedalusService->findById($daedalusId);
@@ -223,6 +218,38 @@ class AdminController extends AbstractFOSRestController
         return $this->view("{$numberOfElementsDeleted} alert elements deleted successfully", Response::HTTP_OK);
     }
 
+     /**
+     * Return a player data adapted for admin view.
+     *
+     * @OA\Parameter(
+     *      name="id",
+     *      in="path",
+     *      description="The player id",
+     *
+     *       @OA\Schema(type="string")
+     * )
+     *
+     * @OA\Tag(name="Admin")
+     *
+     * @Security(name="Bearer")
+     *
+     * @Rest\Get(path="/view-player/{id}")
+     *
+     * @Rest\View()
+     */
+    public function getAdminViewPlayer(Player $player): View
+    {   
+        $this->denyAccessIfNotAdmin();
+
+        $context = new Context();
+        $context->setAttribute('groups', ['admin_view']);
+
+        $view = $this->view($player, Response::HTTP_OK);
+        $view->setContext($context);
+
+        return $view;
+    }
+
     private function alertElementHaveSameEquipmentOrPlace(AlertElement $element1, AlertElement $element2): bool
     {
         if ($element1->getEquipment() && $element2->getEquipment()) {
@@ -254,5 +281,16 @@ class AdminController extends AbstractFOSRestController
         $collection->removeElement($element);
 
         return $collection;
+    }
+
+    private function denyAccessIfNotAdmin(): void
+    {
+        $admin = $this->getUser();
+        if (!$admin instanceof User) {
+            throw new HttpException(Response::HTTP_UNAUTHORIZED, 'Request author user not found');
+        }
+        if (!$admin->isAdmin()) {
+            throw new HttpException(Response::HTTP_UNAUTHORIZED, 'Only admins can delete alert elements!');
+        }
     }
 }
