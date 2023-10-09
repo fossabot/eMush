@@ -261,7 +261,7 @@ class AdminController extends AbstractFOSRestController
     {
         $this->denyAccessIfNotAdmin();
 
-        if (!$this->adminService->$this->adminService->isGameInMaintenance()) {
+        if (!$this->adminService->isGameInMaintenance()) {
             return $this->view('Game is not in maintenance', Response::HTTP_BAD_REQUEST);
         }
 
